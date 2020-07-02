@@ -35,8 +35,10 @@ function Connect-Oneroster {
 
     process { 
         
+        $env:ONEROSTER_URL = "$Domain/ims/oneroster/$version"
+
         $p = @{ 
-            uri = "$Domain/ims/oneroster/$version/login"
+            uri = "$env:ONEROSTER_URL/login"
             method = "POST"
             body = @{ "clientid" = $ClientId; "clientsecret" = $ClientSecret }
         }
@@ -45,6 +47,80 @@ function Connect-Oneroster {
         $env:ONEROSTER_TOKEN = $token 
 
         return $token
+
+    }
+
+}
+
+<#
+.SYNOPSIS
+    Queries a oneroster endpoint
+.EXAMPLE
+    PS C:\> Get-Data -Endpoint 'classes' -All
+
+    Gets a list of all classes
+.EXAMPLE
+    PS C:\> $p = @{
+        Endpoint = 'users'
+        Sort = 'familyName'
+        Filter = "role='student'&dateLastModified>'2015-01-01'
+        Field = 'familyName,givenName'
+    }
+        Get-Data @p
+
+    Gets users, sorted by familyname where their role is a student and they were last modified after 2014, showning only the familyname and givenname attributes
+.OUTPUTS
+    Array
+#>
+function Get-Data {
+    
+    [CmdletBinding()]
+    param (
+
+        # Target endpoint to query
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Endpoint,
+
+        # Return all pages
+        [Parameter()]
+        [switch]
+        $All,
+
+        # Sort by
+        [Parameter()]
+        [string]
+        $Sort,
+
+        # filtering attributes: https://www.imsglobal.org/oneroster-v11-final-specification#_Toc480451997
+        [Parameter()]
+        [string]
+        $Filter,
+
+        # Comma seperated selection of specific fields to return
+        [Parameter()]
+        [string]
+        $Field
+
+    )
+
+    process {
+        
+        $url = "$env:ONEROSTER_URL/$Endpoint"
+
+        if ($Sort) { $url += "?sort=$Sort" }
+        if ($Filter) { $url += "?filter=$filter" }
+        if ($Field) { $url += "?field=$Field" }
+
+        $p = @{
+            uri = $url 
+            method = "GET"
+            headers = @{ "authorization" = "bearer $env:ONEROSTER_TOKEN" }
+            FollowRelLink = $all
+        }
+        $data = Invoke-RestMethod @p
+
+        return $data
 
     }
 
