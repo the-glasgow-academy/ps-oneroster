@@ -63,7 +63,7 @@ function Connect-Oneroster {
     PS C:\> $p = @{
         Endpoint = 'users'
         Sort = 'familyName'
-        Filter = "role='student'&dateLastModified>'2015-01-01'
+        Filter = "role='student'&dateLastModified>'2015-01-01'"
         Field = 'familyName,givenName'
     }
         Get-Data @p
@@ -103,6 +103,10 @@ function Get-Data {
         $Field
 
     )
+    
+    begin {
+        if (!$env:ONEROSTER_TOKEN) { throw "No token detected, please use the Connect-Oneroster command" }
+    } 
 
     process {
         
