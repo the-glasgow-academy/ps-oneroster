@@ -39,7 +39,7 @@ Copyright = '(c) Bradley Whiteford. All rights reserved.'
 # PowerShellHostName = ''
 
 # Minimum version of the PowerShell host required by this module
-PowerShellHostVersion = '6'
+PowerShellHostVersion = '6.0'
 
 # Minimum version of Microsoft .NET Framework required by this module. This prerequisite is valid for the PowerShell Desktop edition only.
 # DotNetFrameworkVersion = ''

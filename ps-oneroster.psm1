@@ -25,12 +25,12 @@ function Connect-Oneroster {
         # The login username or id 
         [Parameter(Mandatory = $true)]
         [string]
-        $ClientID,
+        $ClientID = $env:ONEROSTER_CI,
 
         # The login secret or password
         [Parameter(Mandatory = $true)]
         [string]
-        $ClientSecret
+        $ClientSecret = $env:ONEROSTER_CS
     )
 
     process { 
@@ -100,7 +100,7 @@ function Get-Data {
         # Comma seperated selection of specific fields to return
         [Parameter()]
         [string]
-        $Field
+        $Fields
 
     )
     
@@ -110,11 +110,11 @@ function Get-Data {
 
     process {
         
-        $url = "$env:ONEROSTER_URL/$Endpoint"
+        $url = "$env:ONEROSTER_URL/$Endpoint" + "?"
 
-        if ($Sort) { $url += "?sort=$Sort" }
-        if ($Filter) { $url += "?filter=$filter" }
-        if ($Field) { $url += "?field=$Field" }
+        if ($Filter) { $url += "&filter=$filter" }
+        if ($Fields) { $url += "&fields=$Fields" }
+        if ($Sort) { $url += "&sort=$Sort" }
 
         $p = @{
             uri = $url 
