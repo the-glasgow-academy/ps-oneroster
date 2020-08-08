@@ -129,3 +129,82 @@ function Get-Data {
     }
 
 }
+
+function Get-EnrollmentsJoined {
+
+    [CmdletBinding()]
+
+    $enrollments = Get-ORData -endpoint 'enrollments' -all 
+    $classes = Get-ORData -endpoint 'classes' -all
+    $courses = Get-ORData -endpoint 'courses' -all
+
+    $e = $enrollments.enrollments |
+    select-object *,
+    @{ n = 'userSourcedId'; e = { $_.user.sourcedId } },
+    @{ n = 'classSourcedId'; e = { $_.class.sourcedId } }
+
+    $s = $classes.classes |
+        Select-Object *,
+        @{ n = 'courseSourcedId'; e = { $_.course.sourcedId } }
+
+    $c = $courses.courses 
+
+    $jscP = @{
+        left = $s
+        right = $c
+        leftJoinProperty = "courseSourcedId"
+        rightJoinProperty = "sourcedId"
+        Prefix = "course_"
+    }
+    
+    $jsc = Join-Object @jscP
+
+    $jejscP = @{
+        left = $e
+        right = $jsc
+        leftJoinProperty = "classSourcedId"
+        RightJoinProperty = "sourcedId"
+        Prefix = "class_"
+
+    }
+    $jejesc = join-object @jejscP
+
+    $output = [System.Collections.Generic.List[PSCustomObject]]::new()
+    foreach ($i in $jejesc) { 
+
+        $o = [PSCustomObject]@{
+            sourcedId = $i.sourcedId
+            class = [PSCustomObject]@{ 
+                sourcedId = $i.classSourcedId
+                code = $i.class_classCode
+                type = $i.class_classType
+                course = [PSCustomObject]@{
+                    sourcedId = $i.class_courseSourcedId
+                    code = $i.class_course_courseCode
+                    dateLastModified = $i.class_course_dateLastModified
+                    org = $i.class_course_org
+                    status = $i.class_course_status
+                    subjects = $i.class_course_subjects
+                    title = $i.class_course_title
+                }
+                dateLastModified = $i.class_dateLastModified
+                school = $i.class_school
+                status = $i.class_status
+                subjects = $i.class_subjects
+                terms = $i.class_terms
+                title = $i.class_title
+            }
+            dateLastModified = $i.dateLastModified
+            role = $i.role
+            school = $i.school
+            status = $i.status
+            user = [PSCustomObject]@{ sourcedId = $i.userSourcedId }
+            
+        }
+        $output.add($o)
+            
+    }
+
+    return $output
+    
+}
