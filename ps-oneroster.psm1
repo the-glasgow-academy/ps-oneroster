@@ -13,7 +13,7 @@ function Connect-Oneroster {
     param (
 
         # The prefix to your /ims/oneroster url path
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory)]
         [string]
         $Domain,
 
@@ -23,26 +23,54 @@ function Connect-Oneroster {
         $Version = "v1p1",
 
         # The login username or id 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory)]
         [string]
-        $ClientID = $env:ONEROSTER_CI,
+        $ClientID,
 
         # The login secret or password
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory)]
         [string]
-        $ClientSecret = $env:ONEROSTER_CS
+        $ClientSecret,
+
+        # The login endpoint of your oneroster server
+        [Parameter()]
+        [string]
+        $LoginEndpoint,
+
+        # The oneroster scope access required as a space seperated string
+        [Parameter()]
+        [string]
+        $Scope = "roster-core.readonly",
+
+        # The oneroster login server implementation
+        [Parameter()]
+        [ValidateSet("go-oneroster","libre-oneroster")]
+        $Provider = "go-oneroster"
     )
 
     process { 
         
         $env:ONEROSTER_URL = "$Domain/ims/oneroster/$version"
 
-        $p = @{ 
-            uri = "$env:ONEROSTER_URL/login"
-            method = "POST"
-            body = @{ "clientid" = $ClientId; "clientsecret" = $ClientSecret }
+        if ($provider -eq "go-oneroster") {
+            if ('' -eq $LoginEndpoint) { $LoginEndpoint = "login" }
+            $p = @{
+                uri = "$env:ONEROSTER_URL/$LoginEndpoint"
+                method = "POST"
+                body = @{ "clientid" = $ClientId; "clientsecret" = $ClientSecret}
+            }
+            $token = Invoke-RestMethod @p
         }
-        $token = Invoke-RestMethod @p
+
+        if ($provider -eq "libre-oneroster") {
+            if ('' -eq $LoginEndpoint) { $LoginEndpoint = "auth/login" }
+            $p = @{
+                uri = "$Domain/$LoginEndpoint"
+                method = "POST"
+                body = @{ "client_id" = $ClientId; "client_secret" = $ClientSecret; "scope" = $scope}
+            }
+            $token = (Invoke-RestMethod @p).access_token
+        }
 
         $env:ONEROSTER_TOKEN = $token 
 
