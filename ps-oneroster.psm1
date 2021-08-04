@@ -216,6 +216,7 @@ function Get-EnrollmentsJoined {
                     title = $i.class_course_title
                 }
                 dateLastModified = $i.class_dateLastModified
+                grades = $i.class_grades
                 school = $i.class_school
                 status = $i.class_status
                 subjects = $i.class_subjects
