@@ -248,48 +248,84 @@ function Get-EnrollmentsJoined {
 
 <#
 .SYNOPSIS
-    Provides a lookup table to convert CEDS into closest other schooling year
-    group standard and provides a index for logical operations
+    Prints a reference table of Grades/Years across various schooling systems.
 .EXAMPLE
-    PS C:\> ConvertFrom-K12 -Year PK -To SCO
+    PS C:\> ConvertFrom-K12 -K12 "KG"
+    Searches and returns the equivilant schooling system grades of K12's kindergarten
 .OUTPUTS
-    PSCustomObject[]
+    String
 #>
 function ConvertFrom-K12 {
+    [CmdletBinding(DefaultParameterSetName = 'k12')]
     param (
-        [int]$index,
-        [string]$Year,
-        [string]$To,
-        [switch]$All,
-        [switch]$ToIndex
+        # A K12 grade to be converted
+        [Parameter(Mandatory = $true,
+        Position = 0,
+        ParameterSetName = 'k12')]
+        [string]
+        $K12,
+
+        # A table index to reference
+        [Parameter(Mandatory = $true,
+        ParameterSetName = 'index')]
+        [int]
+        $Index,
+
+        # Print all options
+        [Parameter(Mandatory = $true,
+        ParameterSetName = 'print')]
+        [switch]
+        $All,
+
+        # Gets the leaving year of the student
+        [Parameter(ParameterSetName = 'k12')]
+        [Parameter(ParameterSetName ='index')]
+        [switch]
+        $ClassOf
     )
 
     begin {
-        $t = @(
-            [pscustomobject]@{ "INDEX" = 0; "CEDS" = "IT"; "SCO" = ""; "ENG" = ""; }
-            [pscustomobject]@{ "INDEX" = 1; "CEDS" = "PR"; "SCO" = "" ; "ENG" = ""; }
-            [pscustomobject]@{ "INDEX" = 2; "CEDS" = "PK"; "SCO" = "N"; "ENG" = ""; }
-            [pscustomobject]@{ "INDEX" = 3; "CEDS" = "TK"; "SCO" = "KN"; "ENG" = "Reception"; }
-            [pscustomobject]@{ "INDEX" = 4; "CEDS" = "KG"; "SCO" = "P1"; "ENG" = "1"; }
-            [pscustomobject]@{ "INDEX" = 5; "CEDS" = "01"; "SCO" = "P2"; "ENG" = "2"; }
-            [pscustomobject]@{ "INDEX" = 6; "CEDS" = "02"; "SCO" = "P3"; "ENG" = "3"; }
-            [pscustomobject]@{ "INDEX" = 7; "CEDS" = "03"; "SCO" = "P4"; "ENG" = "4"; }
-            [pscustomobject]@{ "INDEX" = 8; "CEDS" = "04"; "SCO" = "P5"; "ENG" = "5"; }
-            [pscustomobject]@{ "INDEX" = 9; "CEDS" = "05"; "SCO" = "P6"; "ENG" = "6"; }
-            [pscustomobject]@{ "INDEX" = 10; "CEDS" = "06"; "SCO" = "P7"; "ENG" = "7"; }
-            [pscustomobject]@{ "INDEX" = 11; "CEDS" = "07"; "SCO" = "S1"; "ENG" = "8"; }
-            [pscustomobject]@{ "INDEX" = 12; "CEDS" = "08"; "SCO" = "S2"; "ENG" = "9"; }
-            [pscustomobject]@{ "INDEX" = 13; "CEDS" = "09"; "SCO" = "S3"; "ENG" = "10"; }
-            [pscustomobject]@{ "INDEX" = 14; "CEDS" = "10"; "SCO" = "S4"; "ENG" = "11"; }
-            [pscustomobject]@{ "INDEX" = 15; "CEDS" = "11"; "SCO" = "S5"; "ENG" = "12"; }
-            [pscustomobject]@{ "INDEX" = 16; "CEDS" = "12"; "SCO" = "S6"; "ENG" = "13"; }
+        $table = @(
+            [pscustomobject]@{ "INDEX" = 0; "CEDS" = "IT"; "SCO" = ""; "ENG" = ""; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 1; "CEDS" = "PR"; "SCO" = "" ; "ENG" = ""; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 2; "CEDS" = "PK"; "SCO" = "N"; "ENG" = ""; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 3; "CEDS" = "TK"; "SCO" = "KN"; "ENG" = "Reception"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 4; "CEDS" = "KG"; "SCO" = "P1"; "ENG" = "1"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 5; "CEDS" = "01"; "SCO" = "P2"; "ENG" = "2"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 6; "CEDS" = "02"; "SCO" = "P3"; "ENG" = "3"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 7; "CEDS" = "03"; "SCO" = "P4"; "ENG" = "4"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 8; "CEDS" = "04"; "SCO" = "P5"; "ENG" = "5"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 9; "CEDS" = "05"; "SCO" = "P6"; "ENG" = "6"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 10; "CEDS" = "06"; "SCO" = "P7"; "ENG" = "7"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 11; "CEDS" = "07"; "SCO" = "S1"; "ENG" = "8"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 12; "CEDS" = "08"; "SCO" = "S2"; "ENG" = "9"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 13; "CEDS" = "09"; "SCO" = "S3"; "ENG" = "10"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 14; "CEDS" = "10"; "SCO" = "S4"; "ENG" = "11"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 15; "CEDS" = "11"; "SCO" = "S5"; "ENG" = "12"; "ClassOf" = $null; }
+            [pscustomobject]@{ "INDEX" = 16; "CEDS" = "12"; "SCO" = "S6"; "ENG" = "13"; "ClassOf" = $null; }
         )
     }
 
     process {
-        if ($index) {$t | where-object {$_.index -eq $index}}
-        if ($to) {$t | where-object {$_.CEDS -eq $year} | Select-Object index,$to}
-        if ($all) {$t}
-        if ($toIndex) {($t | where-object {$_.CEDS -eq $year} | Select-Object index).INDEX}
+        if ($K12) {
+            $result = $table | where-object CEDS -eq $k12
+        }
+
+        if ($index) {
+            $result = $table | where-object index -eq $index
+        }
+
+        if ($all) {
+            $result = $table
+        }
+
+        if ($ClassOf) {
+            $month = get-date -f MM
+            $schoolyear = if ($month -lt "07") { get-date (get-date).AddYears(-1) -f yy }
+                else { get-date -f yy }
+            $leaving = 18 - ($result.index + 1) + $schoolyear
+            $result.ClassOf = $leaving
+        }
+        return $result
     }
 }
