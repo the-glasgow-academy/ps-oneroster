@@ -91,7 +91,7 @@ function Connect-Oneroster {
     PS C:\> $p = @{
         Endpoint = 'users'
         Sort = 'familyName'
-        Filter = "role='student'&dateLastModified>'2015-01-01'"
+        Filter = "role='student' AND dateLastModified>'2015-01-01'"
         Field = 'familyName,givenName'
     }
         Get-Data @p
@@ -115,7 +115,7 @@ function Get-Data {
         [switch]
         $All,
 
-        # Sort by
+        # Sort by field
         [Parameter()]
         [string]
         $Sort,
@@ -128,7 +128,18 @@ function Get-Data {
         # Comma seperated selection of specific fields to return
         [Parameter()]
         [string]
-        $Fields
+        $Fields,
+
+        # The number of the record to start at
+        [Parameter()]
+        [int]
+        $Offset,
+
+        # The total number of records to be returned in a single page (default is 100)
+        [Parameter()]
+        [int]
+        $Limit
+
 
     )
     
@@ -140,9 +151,11 @@ function Get-Data {
         
         $url = "$env:ONEROSTER_URL/$Endpoint" + "?"
 
-        if ($Filter) { $url += "&filter=$filter" }
+        if ($Filter) { $url += "&filter=$Filter" }
         if ($Fields) { $url += "&fields=$Fields" }
         if ($Sort) { $url += "&sort=$Sort" }
+        if ($Offset) { $url += "&offset=$Offset" }
+        if ($Limit) { $url += "&limit=$Limit" }
 
         $p = @{
             uri = $url 
